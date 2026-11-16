@@ -1,12 +1,11 @@
-import update from 'immutability-helper';
 import { memo, useCallback, useEffect, useState } from 'preact/compat';
 import { StateManager } from 'src/StateManager';
 import { Path } from 'src/dnd/types';
-import { getTaskStatusDone, toggleTask } from 'src/parsers/helpers/inlineMetadata';
 
 import { BoardModifiers } from '../../helpers/boardModifiers';
 import { Icon } from '../Icon/Icon';
 import { c } from '../helpers';
+import { toggleItemChecked } from '../keyboard/kb';
 import { Item } from '../types';
 
 interface ItemCheckboxProps {
@@ -30,31 +29,7 @@ export const ItemCheckbox = memo(function ItemCheckbox({
   const [isHoveringCheckbox, setIsHoveringCheckbox] = useState(false);
 
   const onCheckboxChange = useCallback(() => {
-    const updates = toggleTask(item, stateManager.file);
-    if (updates) {
-      const [itemStrings, checkChars, thisIndex] = updates;
-      const replacements: Item[] = itemStrings.map((str, i) => {
-        const next = stateManager.getNewItem(str, checkChars[i]);
-        if (i === thisIndex) next.id = item.id;
-        return next;
-      });
-
-      boardModifiers.replaceItem(path, replacements);
-    } else {
-      boardModifiers.updateItem(
-        path,
-        update(item, {
-          data: {
-            checkChar: {
-              $apply: (v) => {
-                return v === ' ' ? getTaskStatusDone() : ' ';
-              },
-            },
-            $toggle: ['checked'],
-          },
-        })
-      );
-    }
+    toggleItemChecked(stateManager, boardModifiers, path, item);
   }, [item, stateManager, boardModifiers, ...path]);
 
   useEffect(() => {

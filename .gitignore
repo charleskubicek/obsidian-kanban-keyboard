@@ -15,3 +15,6 @@ dist
 test-vault/
 main.js
 styles.css
+# local notes
+CLAUDE.md
+install.sh

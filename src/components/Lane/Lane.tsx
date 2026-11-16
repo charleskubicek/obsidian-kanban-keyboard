@@ -1,7 +1,16 @@
 import animateScrollTo from 'animated-scroll-to';
 import classcat from 'classcat';
 import update from 'immutability-helper';
-import { Fragment, memo, useCallback, useContext, useMemo, useRef, useState } from 'preact/compat';
+import {
+  Fragment,
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'preact/compat';
 import {
   DraggableProps,
   Droppable,
@@ -19,6 +28,7 @@ import { Items } from '../Item/Item';
 import { ItemForm } from '../Item/ItemForm';
 import { KanbanContext, SearchContext, SortContext } from '../context';
 import { c, generateInstanceId } from '../helpers';
+import { useKbSelection } from '../keyboard/kb';
 import { DataTypes, EditState, EditingState, Item, Lane } from '../types';
 import { LaneHeader } from './LaneHeader';
 
@@ -63,6 +73,30 @@ function DraggableLaneRaw({
   const dragHandleRef = useRef<HTMLDivElement>(null);
 
   const bindHandle = useDragHandle(measureRef, dragHandleRef);
+
+  const isKbSelected = useKbSelection(view, (sel) => !isStatic && sel.laneId === lane.id);
+  const isKbSelectedEmpty = useKbSelection(
+    view,
+    (sel) => !isStatic && sel.laneId === lane.id && !sel.itemId
+  );
+
+  useEffect(() => {
+    if (isKbSelectedEmpty) {
+      elementRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+  }, [isKbSelectedEmpty]);
+
+  useEffect(() => {
+    if (isStatic) return;
+    const handler = (id: string) => {
+      if (id === lane.id) setEditState({ x: 0, y: 0 });
+    };
+
+    view.emitter.on('kbNewCard', handler);
+    return () => {
+      view.emitter.off('kbNewCard', handler);
+    };
+  }, [view, lane.id, isStatic]);
 
   const shouldMarkItemsComplete = !!lane.data.shouldMarkItemsComplete;
   const isCompactPrepend = insertionMethod === 'prepend-compact';
@@ -154,7 +188,14 @@ function DraggableLaneRaw({
         <div
           data-count={lane.children.length}
           ref={elementRef}
-          className={classcat([c('lane'), { 'will-prepend': shouldPrepend }])}
+          className={classcat([
+            c('lane'),
+            {
+              'will-prepend': shouldPrepend,
+              'is-kb-selected': isKbSelected,
+              'is-kb-selected-empty': isKbSelectedEmpty,
+            },
+          ])}
         >
           <CollapsedDropArea {...dropAreaProps}>
             <LaneHeader

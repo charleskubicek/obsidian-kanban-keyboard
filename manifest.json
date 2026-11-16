@@ -1,9 +1,9 @@
 {
-	"id": "obsidian-kanban",
-	"name": "Kanban",
+	"id": "obsidian-kanban-keyboard",
+	"name": "Kanban (keyboard)",
 	"version": "2.0.51",
 	"minAppVersion": "1.0.0",
-	"description": "Create markdown-backed Kanban boards in Obsidian.",
+	"description": "Fork of the Kanban plugin with keyboard navigation: Tab between lists, arrows between cards, and keys to move, edit and complete cards.",
 	"author": "mgmeyers",
 	"authorUrl": "https://github.com/mgmeyers/obsidian-kanban",
 	"helpUrl": "https://publish.obsidian.md/kanban/Obsidian+Kanban+Plugin",

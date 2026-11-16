@@ -16,6 +16,7 @@ import { frontmatterKey } from 'src/parsers/common';
 
 import { KanbanContext, SearchContext } from '../context';
 import { c } from '../helpers';
+import { useKbSelection } from '../keyboard/kb';
 import { EditState, EditingState, Item, isEditing } from '../types';
 import { ItemCheckbox } from './ItemCheckbox';
 import { ItemContent } from './ItemContent';
@@ -46,8 +47,20 @@ const ItemInner = memo(function ItemInner({
   searchQuery,
   isStatic,
 }: ItemInnerProps) {
-  const { stateManager, boardModifiers } = useContext(KanbanContext);
+  const { stateManager, boardModifiers, view } = useContext(KanbanContext);
   const [editState, setEditState] = useState<EditState>(EditingState.cancel);
+
+  useEffect(() => {
+    if (isStatic) return;
+    const handler = (id: string) => {
+      if (id === item.id) setEditState({ x: 0, y: 0 });
+    };
+
+    view.emitter.on('kbEditCard', handler);
+    return () => {
+      view.emitter.off('kbEditCard', handler);
+    };
+  }, [view, item.id, isStatic]);
 
   const dndManager = useContext(DndManagerContext);
 
@@ -141,8 +154,25 @@ export const DraggableItem = memo(function DraggableItem(props: DraggableItemPro
   const elementRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const search = useContext(SearchContext);
+  const { view } = useContext(KanbanContext);
 
   const { itemIndex, ...innerProps } = props;
+
+  const itemId = props.item.id;
+  const isKbSelected = useKbSelection(view, (sel) => !props.isStatic && sel.itemId === itemId);
+
+  useEffect(() => {
+    if (isKbSelected) {
+      elementRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+  }, [isKbSelected]);
+
+  const onSelectClick = useCallback(() => {
+    if (props.isStatic) return;
+    const board = view.plugin.stateManagers.get(view.file)?.state;
+    const lane = board?.children.find((l) => l.children.some((i) => i.id === itemId));
+    if (lane) view.setKbSelection({ laneId: lane.id, itemId });
+  }, [view, itemId, props.isStatic]);
 
   const bindHandle = useDragHandle(measureRef, measureRef);
 
@@ -157,7 +187,11 @@ export const DraggableItem = memo(function DraggableItem(props: DraggableItemPro
       }}
       className={c('item-wrapper')}
     >
-      <div ref={elementRef} className={classcat([c('item'), ...classModifiers])}>
+      <div
+        ref={elementRef}
+        onClick={onSelectClick}
+        className={classcat([c('item'), ...classModifiers, { 'is-kb-selected': isKbSelected }])}
+      >
         {props.isStatic ? (
           <ItemInner
             {...innerProps}

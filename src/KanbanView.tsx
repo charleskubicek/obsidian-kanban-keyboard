@@ -16,6 +16,7 @@ import { KanbanFormat, KanbanSettings, KanbanViewSettings, SettingsModal } from 
 import { Kanban } from './components/Kanban';
 import { BasicMarkdownRenderer } from './components/MarkdownRenderer/MarkdownRenderer';
 import { c } from './components/helpers';
+import { KbSelection, emptyKbSelection } from './components/keyboard/kb';
 import { Board } from './components/types';
 import { getParentWindow } from './dnd/util/getWindow';
 import { gotoNextDailyNote, gotoPrevDailyNote, hasFrontmatterKeyRaw } from './helpers';
@@ -38,6 +39,14 @@ export class KanbanView extends TextFileView implements HoverParent {
   previewQueue: PromiseQueue;
 
   activeEditor: any;
+  kbSelection: KbSelection = emptyKbSelection;
+
+  setKbSelection(sel: KbSelection) {
+    const prev = this.kbSelection;
+    if (prev.laneId === sel.laneId && prev.itemId === sel.itemId) return;
+    this.kbSelection = sel;
+    this.emitter.emit('kbSelection', sel);
+  }
   viewSettings: KanbanViewSettings = {};
 
   get isPrimary(): boolean {

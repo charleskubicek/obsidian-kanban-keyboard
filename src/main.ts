@@ -16,6 +16,7 @@ import { KanbanView, kanbanIcon, kanbanViewType } from './KanbanView';
 import { KanbanSettings, KanbanSettingsTab } from './Settings';
 import { StateManager } from './StateManager';
 import { DateSuggest, TimeSuggest } from './components/Editor/suggest';
+import { KbAction, kbActionNames } from './components/keyboard/kb';
 import { getParentWindow } from './dnd/util/getWindow';
 import { hasFrontmatterKey } from './helpers';
 import { t } from './lang/helpers';
@@ -720,6 +721,21 @@ export default class KanbanPlugin extends Plugin {
 
         view.getBoardSettings();
       },
+    });
+
+    (Object.keys(kbActionNames) as KbAction[]).forEach((action) => {
+      this.addCommand({
+        id: `kb-${action}`,
+        name: kbActionNames[action],
+        checkCallback: (checking) => {
+          const view = app.workspace.getActiveViewOfType(KanbanView);
+
+          if (!view) return false;
+          if (checking) return true;
+
+          view.emitter.emit('kbAction', action);
+        },
+      });
     });
   }
 

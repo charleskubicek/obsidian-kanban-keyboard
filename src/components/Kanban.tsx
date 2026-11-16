@@ -20,6 +20,7 @@ import { LaneForm } from './Lane/LaneForm';
 import { TableView } from './Table/Table';
 import { KanbanContext, SearchContext } from './context';
 import { baseClassName, c, useSearchValue } from './helpers';
+import { useKeyboardNav } from './keyboard/kb';
 import { DataTypes } from './types';
 
 const boardScrollTiggers = [DataTypes.Item, DataTypes.Lane];
@@ -209,6 +210,8 @@ export const Kanban = ({ view, stateManager }: KanbanProps) => {
     setDebouncedSearchQuery,
     setIsSearching
   );
+
+  useKeyboardNav({ view, stateManager, boardModifiers, search: searchValue });
 
   return (
     <DndScope id={view.id}>

@@ -228,12 +228,24 @@ export function MarkdownEditor({
     controller.editMode = editor;
     editor.set(value || '');
     if (isEditing(editState)) {
+      // Keyboard edits pass no real coordinates; put the cursor at the end
+      const rect = cm.dom.getBoundingClientRect();
+      const inside =
+        editState.x >= rect.left &&
+        editState.x <= rect.right &&
+        editState.y >= rect.top &&
+        editState.y <= rect.bottom;
+      const pos = inside ? cm.posAtCoords(editState, false) : cm.state.doc.length;
+
       cm.dispatch({
         userEvent: 'select.pointer',
-        selection: EditorSelection.single(cm.posAtCoords(editState, false)),
+        selection: EditorSelection.single(pos),
       });
 
       cm.dom.win.setTimeout(() => {
+        // A double-click focuses the editor by itself; Enter from the
+        // keyboard doesn't, so typing would otherwise go nowhere
+        if (!cm.hasFocus) cm.focus();
         setInsertMode(cm);
       });
     }
@@ -249,13 +261,18 @@ export function MarkdownEditor({
     return () => {
       if (Platform.isMobile) {
         cm.dom.win.removeEventListener('keyboardDidShow', onShow);
+      }
 
-        if (view.activeEditor === controller) {
-          view.activeEditor = null;
-        }
+      // Clear the active editor on every platform, otherwise hotkeys stay
+      // routed to a destroyed editor after a card is added (upstream PR #1147)
+      if (view.activeEditor === controller) {
+        view.activeEditor = null;
+      }
 
-        if (app.workspace.activeEditor === controller) {
-          app.workspace.activeEditor = null;
+      if (app.workspace.activeEditor === controller) {
+        app.workspace.activeEditor = null;
+
+        if (Platform.isMobile) {
           (app as any).mobileToolbar.update();
           view.contentEl.removeClass('is-mobile-editing');
         }

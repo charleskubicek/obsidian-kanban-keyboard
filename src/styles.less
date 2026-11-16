@@ -1786,3 +1786,31 @@ body:not(.native-scrollbars) .kanban-plugin__scroll-container::-webkit-scrollbar
     background-color: var(--date-background-color, rgba(var(--mono-rgb-100), 0.05));
   }
 }
+
+/* Keyboard navigation */
+// Drawn inside the card: an outer box-shadow gets clipped by the list's
+// scroll container, leaving only the 1px border visible.
+// The accent is mixed with the text colour so the highlight stays visible
+// with pale accents (darker in light mode, lighter in dark mode).
+.kanban-plugin__item.is-kb-selected {
+  --kb-ring: color-mix(in srgb, var(--color-accent) 55%, var(--text-normal));
+  --kb-fill: color-mix(in srgb, var(--color-accent) 30%, var(--background-primary));
+  border-color: var(--kb-ring);
+  box-shadow: inset 0 0 0 2px var(--kb-ring);
+  background-color: var(--kb-fill);
+
+  .kanban-plugin__item-content-wrapper,
+  .kanban-plugin__item-title-wrapper {
+    background-color: transparent;
+  }
+}
+
+.kanban-plugin__lane.is-kb-selected {
+  border-color: hsla(var(--interactive-accent-hsl), 0.6);
+}
+
+.kanban-plugin__lane.is-kb-selected-empty {
+  --kb-ring: color-mix(in srgb, var(--color-accent) 55%, var(--text-normal));
+  border-color: var(--kb-ring);
+  box-shadow: inset 0 0 0 2px var(--kb-ring);
+}
